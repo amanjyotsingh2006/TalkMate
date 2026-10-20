@@ -63,7 +63,7 @@ const Navbar = () => {
               sm:block
             "
           >
-            Streamify
+            TalkMate
           </h1>
         </Link>
       </div>

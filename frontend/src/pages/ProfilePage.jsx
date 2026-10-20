@@ -12,6 +12,7 @@ import useAuthUser from "../hooks/useAuthUser";
 import { getUserFriends } from "../lib/api";
 import { getLanguageFlag } from "../components/FriendCard";
 import { capitialize } from "../lib/utils";
+import { Link } from "react-router";
 
 const ProfilePage = () => {
   const { theme } = useThemeStore();
@@ -153,8 +154,7 @@ const ProfilePage = () => {
               </button>
 
               {/* Edit Profile */}
-              <button
-                type="button"
+              <Link to="/profile/edit"
                 className="
                   flex items-center gap-1.5
                   rounded-full
@@ -168,7 +168,7 @@ const ProfilePage = () => {
               >
                 <PencilIcon className="size-3.5" />
                 Edit profile
-              </button>
+              </Link>
             </div>
           </div>
         </div>

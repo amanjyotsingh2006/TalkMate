@@ -6,27 +6,10 @@ const CallButton = ({ handleVideoCall }) => {
             type="button"
             onClick={handleVideoCall}
             aria-label="Start video call"
-            className="
-                flex
-                items-center
-                justify-center
-                gap-2
-                rounded-full
-                bg-[#8FE388]
-                px-4
-                py-2
-                text-[13px]
-                font-semibold
-                text-[#0B1410]
-                shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]
-                transition-all
-                duration-200
-                hover:bg-[#A6EC9E]
-                hover:shadow-[0_0_0_1px_rgba(143,227,136,0.4),0_8px_22px_-8px_rgba(143,227,136,0.5)]
-                active:scale-95
-            "
+            className="relative z-50 flex h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-[#8FE388] px-4 text-sm font-semibold text-[#0B1410] shadow-md hover:bg-[#A6EC9E]"
         >
-            <VideoIcon className="h-4 w-4" />
+            <VideoIcon className="h-5 w-5" />
+            <span>Video Call</span>
         </button>
     );
 };

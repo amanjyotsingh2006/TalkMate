@@ -1,6 +1,13 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import {upsertStreamUser} from "../db/stream.js"
+import { upsertStreamUser } from "../db/stream.js"
+
+import { OAuth2Client } from "google-auth-library";
+import { generateAccessToken } from "../utils/generateToken.js";
+
+const googleClient = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID
+);
 
 
 
@@ -69,7 +76,6 @@ export async function signup(req, res) {
 }
 
 
-
 // Login Logic
 export async function login(req, res) {
     try {
@@ -81,6 +87,10 @@ export async function login(req, res) {
 
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ message: "Invalid email or password" });
+
+        if (!user.password) {
+            return res.status(400).json({ message: "This account uses Google Login. Please continue with Google." })
+        }
 
         const isPasswordCorrect = await user.matchPassword(password)
         if (!isPasswordCorrect) return res.status(401).json({ message: "Invalid email or password" });
@@ -113,15 +123,106 @@ export function logout(req, res) {
 
 
 
+// Google Login Logic
+export const googleLogin = async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({
+                success: false,
+                message: "Google credential is required"
+            });
+        }
+
+        // Verify Google credential
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+
+        const {
+            sub,
+            email,
+            name,
+            picture
+        } = payload;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Google email not available"
+            });
+        }
+
+        // Find existing user
+        let user = await User.findOne({ email });
+
+        // Create user if not found
+        if (!user) {
+            user = await User.create({
+                fullName: name || "Google User",
+                email: email,
+                password: null,
+                googleId: sub,
+                profilePic: picture || "",
+                isOnboarded: false
+            });
+        } else {
+            // Link Google account if user already exists
+            if (!user.googleId) {
+                user.googleId = sub;
+                await user.save({
+                    validateBeforeSave: false
+                });
+            }
+        }
+
+        // Generate access token
+        const accessToken = generateAccessToken(user);
+
+        // Store JWT in cookie
+        res.cookie("jwt", accessToken, {
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false
+        });
+
+        // Remove password before sending user
+        const loggedInUser = await User.findById(user._id)
+            .select("-password");
+
+        return res.status(200).json({
+            success: true,
+            message: "Google login successful",
+            user: loggedInUser
+        });
+
+    } catch (error) {
+        console.error("GOOGLE LOGIN ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Google login failed",
+            error: error.message
+        });
+    }
+};
+
+
 // Onboard Logic
-export async function onboard(req,res) {
+export async function onboard(req, res) {
     try {
         const userId = req.user._id;
 
-        const {fullName, bio, nativeLanguage, learningLanguage, location} = req.body;
+        const { fullName, bio, nativeLanguage, learningLanguage, location } = req.body;
 
-        if(!fullName || !bio || !nativeLanguage || !learningLanguage || !location) {
-            return res.status(400).json({message: "All fields are required",
+        if (!fullName || !bio || !nativeLanguage || !learningLanguage || !location) {
+            return res.status(400).json({
+                message: "All fields are required",
                 missingFields: [
                     !fullName && "fullName",
                     !bio && "bio",
@@ -135,11 +236,11 @@ export async function onboard(req,res) {
         const updatedUser = await User.findByIdAndUpdate(userId, {
             ...req.body,
             isOnboarded: true
-        }, {new: true})
+        }, { new: true })
 
-        if(!updatedUser) return res.status(404).json({message: "User not found"}) 
+        if (!updatedUser) return res.status(404).json({ message: "User not found" })
 
-        res.status(200).json({success: true, user: updatedUser})
+        res.status(200).json({ success: true, user: updatedUser })
 
         try {
             await upsertStreamUser({
@@ -152,6 +253,6 @@ export async function onboard(req,res) {
             console.log("Error updating Stream user during onboarding:", streamError.message);
         }
     } catch (error) {
-        
+
     }
 }

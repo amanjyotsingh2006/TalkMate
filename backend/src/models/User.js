@@ -13,12 +13,12 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
-        minlength: 6
+        minlength: 6,
+        default: null
     },
     bio: {
         type: String,
-        default:""
+        default: ""
     },
     profilePic: {
         type: String,
@@ -30,11 +30,11 @@ const userSchema = new mongoose.Schema({
     },
     learningLanguage: {
         type: String,
-        default:""
+        default: ""
     },
     location: {
         type: String,
-        default:""
+        default: ""
     },
     isOnboarded: {
         type: Boolean,
@@ -46,23 +46,40 @@ const userSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
         }
-    ]
-}, {timestamps:true})
+    ],
+
+    googleId: {
+        type: String,
+        default: null
+    }
+}, { timestamps: true })
 
 
 // Password Hashing
 userSchema.pre("save", async function (next) {
-    if(!this.isModified("password")) return next();
-    
+    // Password hasn't changed
+    if (!this.isModified("password")) {
+        return next();
+    }
+
+    // Google users don't have a password
+    if (!this.password) {
+        return next();
+    }
+
     try {
         const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        
+
+        this.password = await bcrypt.hash(
+            this.password,
+            salt
+        );
+
         next();
     } catch (error) {
         next(error);
     }
-})
+});
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
     const isPasswordCorrect = await bcrypt.compare(enteredPassword, this.password);

@@ -16,6 +16,9 @@ import useAuthUser from "./hooks/useAuthUser";
 import { useThemeStore } from "./Store/useThemeStore";
 import FriendsPage from "./pages/FriendPage";
 import ProfilePage from "./pages/ProfilePage";
+import EditProfilePage from "./pages/EditProfilePage";
+import FileViewer from "./pages/FileViewer";
+import LandingPage from "./pages/landingPage";
 
 const App = () => {
   const { isLoading, authUser } = useAuthUser();
@@ -29,6 +32,17 @@ const App = () => {
   return (
     <div className="h-screen" data-theme={theme}>
       <Routes>
+        <Route
+          path="/landing"
+          element={
+            isAuthenticated && isOnboarded ? (
+              <Navigate to="/" replace />
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
+
         <Route
           path="/"
           element={
@@ -165,7 +179,27 @@ const App = () => {
             )
           }
         />
+
+        <Route
+          path="/profile/edit"
+          element={
+            isAuthenticated && isOnboarded ? (
+              <Layout showSidebar>
+                <EditProfilePage />
+              </Layout>
+            ) : (
+              <Navigate
+                to={!isAuthenticated ? "/login" : "/onboarding"}
+              />
+            )
+          }
+        />
+
+        <Route path="/file-viewer" element={<FileViewer />} />
+
       </Routes>
+
+
 
       <Toaster position="top-right" />
     </div>
