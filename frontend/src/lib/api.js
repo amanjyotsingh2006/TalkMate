@@ -94,3 +94,13 @@ export const getStreamToken = async () => {
     const res = await axiosInstance.get("/chat/token")
     return res.data
 }
+
+export const getProfileStats = async () => {
+  const res = await axiosInstance.get("/users/profile-stats");
+  return res.data;
+};
+
+export const addPracticeTime = async (seconds) => {
+  const res = await axiosInstance.post("/users/practice-time", { seconds });
+  return res.data;
+};  

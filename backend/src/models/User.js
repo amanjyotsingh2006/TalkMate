@@ -51,6 +51,11 @@ const userSchema = new mongoose.Schema({
     googleId: {
         type: String,
         default: null
+    },
+
+    practiceSeconds: {
+        type: Number,
+        default: 0
     }
 }, { timestamps: true })
 

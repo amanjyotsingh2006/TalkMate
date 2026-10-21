@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -71,9 +70,7 @@ const CallPage = () => {
       } catch (error) {
         console.error("Error joining call:", error);
 
-        toast.error(
-          "Could not join the call. Please try again."
-        );
+        toast.error("Could not join the call. Please try again.");
       } finally {
         setIsConnecting(false);
       }
@@ -96,7 +93,7 @@ const CallPage = () => {
       data-theme={theme}
       className="
         flex
-        h-screen
+        h-[100dvh]
         w-full
         flex-col
         overflow-hidden
@@ -114,17 +111,20 @@ const CallPage = () => {
           shrink-0
           items-center
           justify-between
+          gap-3
           border-b
           border-base-300
           bg-base-100
-          px-4
-          py-3
+          px-3
+          py-2.5
+          pt-[max(0.625rem,env(safe-area-inset-top))]
           sm:px-5
+          sm:py-3
         "
       >
         {/* LOGO */}
 
-        <span className="font-display text-lg font-medium text-primary">
+        <span className="truncate font-display text-base font-medium text-primary sm:text-lg">
           Streamify
         </span>
 
@@ -134,17 +134,21 @@ const CallPage = () => {
           <div
             className="
               flex
+              shrink-0
               items-center
               gap-2
               rounded-full
               border
               border-base-300
               bg-base-200
-              px-3.5
-              py-1.5
-              text-[13px]
+              px-3
+              py-1
+              text-xs
               font-medium
               text-base-content/70
+              sm:px-3.5
+              sm:py-1.5
+              sm:text-[13px]
             "
           >
             <span className="size-1.5 rounded-full bg-success" />
@@ -167,7 +171,7 @@ const CallPage = () => {
           w-full
           items-center
           justify-center
-          p-2
+          p-0
           sm:p-4
           lg:p-5
         "
@@ -179,8 +183,8 @@ const CallPage = () => {
               h-full
               w-full
               overflow-hidden
-              rounded-xl
-              border
+              rounded-none
+              border-0
               border-base-300
               bg-base-100
               shadow-2xl
@@ -188,6 +192,7 @@ const CallPage = () => {
               sm:h-[97%]
               sm:w-[98%]
               sm:rounded-2xl
+              sm:border
 
               lg:h-[96%]
               lg:w-[97%]
@@ -210,7 +215,8 @@ const CallPage = () => {
               w-full
               items-center
               justify-center
-              px-6
+              px-4
+              sm:px-6
             "
           >
             <div
@@ -221,9 +227,10 @@ const CallPage = () => {
                 border
                 border-base-300
                 bg-base-100
-                p-8
+                p-6
                 text-center
                 shadow-2xl
+                sm:p-8
               "
             >
               <h2
@@ -307,14 +314,23 @@ const CallContent = () => {
         </div>
 
         {/* ================= CONTROLS ================= */}
+        {/* Centered, never wider than the screen; scrolls sideways
+            if a very narrow phone can't fit every button */}
 
         <div
           className="
             absolute
-            bottom-5
+            bottom-3
             left-1/2
             z-50
+            max-w-[calc(100%-1rem)]
             -translate-x-1/2
+            overflow-x-auto
+            pb-[env(safe-area-inset-bottom)]
+            sm:bottom-5
+            sm:max-w-none
+            sm:overflow-visible
+            sm:pb-0
           "
         >
           <CallControls />

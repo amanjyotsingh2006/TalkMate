@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +8,9 @@ import {
   CheckIcon,
   XIcon,
   UsersRoundIcon,
+  HomeIcon,
+  BellIcon,
+  UserIcon,
 } from "lucide-react";
 
 import { useThemeStore } from "../Store/useThemeStore";
@@ -87,27 +89,28 @@ const FriendsPage = () => {
         text-base-content
       "
     >
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-
+      {/* pb-24 on mobile keeps content clear of the fixed bottom nav */}
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 pb-24 sm:px-6 sm:pb-10 lg:px-8 lg:py-10">
         {/* ================= HEADER ================= */}
         <h1
           className="
-            mb-2
+            mb-1
             font-display
-            text-3xl
+            text-2xl
             text-base-content
+            sm:mb-2
             sm:text-4xl
           "
         >
           Your friends
         </h1>
 
-        <p className="mb-8 text-sm text-base-content/60">
+        <p className="mb-6 text-sm text-base-content/60 sm:mb-8">
           People you're learning and speaking with.
         </p>
 
         {/* ================= TABS ================= */}
-        <div className="mb-6 flex gap-6 border-b border-base-300">
+        <div className="mb-5 flex gap-6 border-b border-base-300 sm:mb-6">
           <button
             type="button"
             onClick={() => setTab("all")}
@@ -153,7 +156,7 @@ const FriendsPage = () => {
         {tab === "all" ? (
           <>
             {/* ================= SEARCH + FILTERS ================= */}
-            <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center">
               {/* Search */}
               <div className="relative flex-1">
                 <SearchIcon
@@ -187,8 +190,8 @@ const FriendsPage = () => {
                 />
               </div>
 
-              <div className="flex shrink-0 items-center gap-3">
-
+              {/* Mobile: filter on left, toggle on right, same line */}
+              <div className="flex items-center justify-between gap-3 sm:shrink-0 sm:justify-start">
                 {/* Language Filter */}
                 <div className="relative">
                   <button
@@ -217,13 +220,15 @@ const FriendsPage = () => {
                   {filterOpen && (
                     <div
                       className="
-                        absolute right-0 z-20 mt-2
-                        w-48
+                        absolute left-0 z-20 mt-2
+                        max-h-64 w-48
+                        overflow-y-auto
                         rounded-xl
                         border border-base-300
                         bg-base-100
                         p-1.5
                         shadow-xl
+                        sm:left-auto sm:right-0
                       "
                     >
                       <button
@@ -291,11 +296,7 @@ const FriendsPage = () => {
                       shrink-0
                       rounded-full
                       transition-colors duration-200
-                      ${
-                        onlineOnly
-                          ? "bg-primary"
-                          : "bg-base-300"
-                      }
+                      ${onlineOnly ? "bg-primary" : "bg-base-300"}
                     `}
                     aria-pressed={onlineOnly}
                     aria-label="Show online friends only"
@@ -308,11 +309,7 @@ const FriendsPage = () => {
                         bg-base-100
                         shadow-sm
                         transition-transform duration-200
-                        ${
-                          onlineOnly
-                            ? "translate-x-[18px]"
-                            : "translate-x-0"
-                        }
+                        ${onlineOnly ? "translate-x-[18px]" : "translate-x-0"}
                       `}
                     />
                   </button>
@@ -331,8 +328,9 @@ const FriendsPage = () => {
                   rounded-[18px]
                   border border-base-300
                   bg-base-100
-                  p-10
+                  p-8
                   text-center
+                  sm:p-10
                 "
               >
                 <div
@@ -356,7 +354,7 @@ const FriendsPage = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
                 {filteredFriends.map((friend) => (
                   <div
                     key={friend._id}
@@ -365,11 +363,12 @@ const FriendsPage = () => {
                       rounded-[18px]
                       border border-base-300
                       bg-base-100
-                      p-5
+                      p-4
                       transition-all duration-200
-                      hover:-translate-y-0.5
                       hover:border-primary/40
-                      hover:shadow-lg
+                      sm:p-5
+                      sm:hover:-translate-y-0.5
+                      sm:hover:shadow-lg
                     "
                   >
                     {/* Friend Header */}
@@ -385,10 +384,11 @@ const FriendsPage = () => {
                           alt={friend.fullName}
                           loading="lazy"
                           className="
-                            size-14
+                            size-12
                             rounded-full
                             object-cover
                             ring-2 ring-base-300
+                            sm:size-14
                           "
                         />
 
@@ -407,7 +407,7 @@ const FriendsPage = () => {
                         />
                       </div>
 
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <h3 className="truncate font-display text-base text-base-content">
                           {friend.fullName}
                         </h3>
@@ -454,7 +454,7 @@ const FriendsPage = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="mt-5 flex gap-2">
+                    <div className="mt-4 flex gap-2 sm:mt-5">
                       <Link
                         to={`/chat/${friend._id}`}
                         className="
@@ -492,8 +492,9 @@ const FriendsPage = () => {
                   rounded-[18px]
                   border border-base-300
                   bg-base-100
-                  p-10
+                  p-8
                   text-center
+                  sm:p-10
                 "
               >
                 <h3 className="font-display text-lg text-base-content">
@@ -513,13 +514,13 @@ const FriendsPage = () => {
                       rounded-[18px]
                       border border-base-300
                       bg-base-100
-                      p-4
+                      p-3
                       transition-all duration-200
                       hover:border-primary/30
+                      sm:p-4
                     "
                   >
                     <div className="flex items-center gap-3">
-
                       {/* Request Sender Image */}
                       <img
                         src={
@@ -530,15 +531,17 @@ const FriendsPage = () => {
                         }
                         alt={request.sender.fullName}
                         className="
-                          size-12
+                          size-11
+                          shrink-0
                           rounded-full
                           object-cover
                           ring-2 ring-base-300
+                          sm:size-12
                         "
                       />
 
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-display text-[15px] text-base-content">
+                        <h3 className="truncate font-display text-[15px] text-base-content">
                           {request.sender.fullName}
                         </h3>
 
@@ -577,9 +580,7 @@ const FriendsPage = () => {
                       <div className="flex shrink-0 gap-2">
                         <button
                           type="button"
-                          onClick={() =>
-                            acceptRequestMutation(request._id)
-                          }
+                          onClick={() => acceptRequestMutation(request._id)}
                           disabled={accepting}
                           className="
                             flex size-9
@@ -626,6 +627,58 @@ const FriendsPage = () => {
           </div>
         )}
       </div>
+
+      {/* =====================================================
+          MOBILE BOTTOM NAVIGATION
+          Desktop: hidden
+      ===================================================== */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-base-300 bg-base-100 sm:hidden">
+        <div className="grid grid-cols-4 px-2 py-1.5">
+          {/* HOME */}
+          <Link
+            to="/"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-base-content/60 transition hover:text-primary"
+          >
+            <div className="flex size-8 items-center justify-center">
+              <HomeIcon className="size-[18px]" />
+            </div>
+            <span className="text-[9px] font-medium">Home</span>
+          </Link>
+
+          {/* FRIENDS (active) */}
+          <Link
+            to="/friends"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-primary"
+          >
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+              <UsersRoundIcon className="size-4" />
+            </div>
+            <span className="text-[9px] font-semibold">Friends</span>
+          </Link>
+
+          {/* NOTIFICATIONS */}
+          <Link
+            to="/notification"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-base-content/60 transition hover:text-primary"
+          >
+            <div className="flex size-8 items-center justify-center">
+              <BellIcon className="size-[18px]" />
+            </div>
+            <span className="text-[9px] font-medium">Notifications</span>
+          </Link>
+
+          {/* PROFILE */}
+          <Link
+            to="/profile"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-base-content/60 transition hover:text-primary"
+          >
+            <div className="flex size-8 items-center justify-center">
+              <UserIcon className="size-[18px]" />
+            </div>
+            <span className="text-[9px] font-medium">Profile</span>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 };

@@ -31,46 +31,62 @@ const LoginPage = () => {
     password: "",
   });
 
+
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-    if (!window.google || !clientId || googleInitialized.current) {
+    if (!clientId) {
+      console.error("Missing VITE_GOOGLE_CLIENT_ID in frontend .env");
       return;
     }
 
-    window.google.accounts.id.initialize({
-      client_id: clientId,
+    let cancelled = false;
 
-      callback: async (response) => {
-        try {
-          await axiosInstance.post(
-            "/auth/google-login",
-            {
-              credential: response.credential
-            }
-          );
-
-          toast.success("Login successful");
-
-          await queryClient.invalidateQueries({
-            queryKey: ["authUser"],
-          });
-
-          navigate("/home");
-
-        } catch (error) {
-          console.error("Google login error:", error);
-
-          toast.error(
-            error.response?.data?.message ||
-            "Google login failed"
-          );
-        }
+    const initializeGoogle = () => {
+      if (cancelled || !window.google || googleInitialized.current) {
+        return;
       }
-    });
 
-    googleInitialized.current = true;
-  }, [navigate]);
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response) => {
+          try {
+            await axiosInstance.post("/auth/google-login", {
+              credential: response.credential,
+            });
+
+            toast.success("Login successful");
+            await queryClient.invalidateQueries({ queryKey: ["authUser"] });
+            navigate("/home");
+          } catch (error) {
+            console.error("Google login error:", error);
+            toast.error(error.response?.data?.message || "Google login failed");
+          }
+        },
+      });
+
+      googleInitialized.current = true;
+    };
+
+    if (window.google) {
+      initializeGoogle();
+    } else {
+      const script = document.querySelector(
+        'script[src="https://accounts.google.com/gsi/client"]'
+      );
+
+      if (script) {
+        script.addEventListener("load", initializeGoogle);
+      } else {
+        console.error("Google Identity Services script is missing from index.html");
+      }
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, queryClient]);
+
 
   const { error, isPending, loginMutation } = useLogin();
 

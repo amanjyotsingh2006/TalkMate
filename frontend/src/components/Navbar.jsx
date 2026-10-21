@@ -13,6 +13,8 @@ const Navbar = () => {
 
   const isChatPage = pathname.startsWith("/chat");
 
+  if (isChatPage) return null;
+
   return (
     <nav
       data-theme={theme}
@@ -26,7 +28,9 @@ const Navbar = () => {
       "
     >
       {/* ================= LOGO ================= */}
-      <div className={isChatPage ? "flex" : "invisible"}>
+      {/* Mobile: always visible. Desktop (sm+): only on chat page,
+          otherwise invisible so the layout spacing stays the same */}
+      <div className={isChatPage ? "flex" : "flex sm:invisible"}>
         <Link
           to="/"
           className="
@@ -54,15 +58,7 @@ const Navbar = () => {
             />
           </div>
 
-          <h1
-            className="
-              hidden
-              font-display
-              text-2xl
-              text-base-content
-              sm:block
-            "
-          >
+          <h1 className="font-display text-xl text-base-content sm:text-2xl">
             TalkMate
           </h1>
         </Link>
@@ -70,7 +66,6 @@ const Navbar = () => {
 
       {/* ================= RIGHT SIDE ================= */}
       <div className="flex items-center gap-2 sm:gap-4">
-
         {/* Notifications */}
         <Link
           to="/notification"

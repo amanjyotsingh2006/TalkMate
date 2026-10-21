@@ -1,5 +1,6 @@
 import FriendRequest from "../models/FriendRequest.js";
 import User from "../models/User.js"
+import { streamClient } from "../db/stream.js";
 
 export async function getRecommendedUser(req,res) {
     try {
@@ -177,5 +178,50 @@ export const updateProfile = async (req, res) => {
     } catch (error) {
         res.status(500).json({message: "Failed to update Profile"})
         console.error("Error in updateProfile controller", error.message)
+    }
+}
+
+
+
+export async function getProfileStats(req, res) {
+    try {
+        const userId = req.user._id.toString();
+
+        const channels = await streamClient.queryChannels(
+            { type: "messaging", members: { $in: [userId] } },
+            {},
+            { limit: 100 }
+        );
+
+        // Only count chats that actually have messages
+        const conversations = channels.filter(
+            (c) => c.state.messages.length > 0
+        ).length;
+
+        const user = await User.findById(userId).select("practiceSeconds");
+
+        res.status(200).json({
+            conversations,
+            practiceSeconds: user?.practiceSeconds || 0,
+        });
+    } catch (error) {
+        console.log("Error in getProfileStats controller", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+export async function addPracticeTime(req, res) {
+    try {
+        // Clamp to 0 - 6 hours so a bad request can't inflate the total
+        const seconds = Math.max(0, Math.min(Number(req.body.seconds) || 0, 6 * 3600));
+
+        await User.findByIdAndUpdate(req.user._id, {
+            $inc: { practiceSeconds: seconds },
+        });
+
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.log("Error in addPracticeTime controller", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 }

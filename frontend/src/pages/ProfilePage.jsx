@@ -1,15 +1,19 @@
-
 import { useQuery } from "@tanstack/react-query";
+import { getProfileStats } from "../lib/api.js";
 import {
   MessageSquareIcon,
   VideoIcon,
   PencilIcon,
   MapPinIcon,
+  HomeIcon,
+  UsersRoundIcon,
+  BellIcon,
+  UserIcon,
 } from "lucide-react";
 
 import { useThemeStore } from "../Store/useThemeStore";
 import useAuthUser from "../hooks/useAuthUser";
-import { getUserFriends } from "../lib/api";
+import { getUserFriends } from "../lib/api.js";
 import { getLanguageFlag } from "../components/FriendCard";
 import { capitialize } from "../lib/utils";
 import { Link } from "react-router";
@@ -18,11 +22,22 @@ const ProfilePage = () => {
   const { theme } = useThemeStore();
   const { authUser } = useAuthUser();
 
-  // Real count — the only stat we actually have data for.
   const { data: friends = [] } = useQuery({
     queryKey: ["friends"],
     queryFn: getUserFriends,
   });
+
+  const { data: stats } = useQuery({
+    queryKey: ["profileStats"],
+    queryFn: getProfileStats,
+    refetchOnMount: "always",
+  });
+
+  const totalMinutes = Math.floor((stats?.practiceSeconds || 0) / 60);
+  const practiceLabel =
+    totalMinutes < 60
+      ? `${totalMinutes}m`
+      : `${(totalMinutes / 60).toFixed(1)}h`;
 
   return (
     <div
@@ -34,11 +49,10 @@ const ProfilePage = () => {
         text-base-content
       "
     >
-      <div className="w-full max-w-4xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-
+      {/* pb-24 on mobile keeps content clear of the fixed bottom nav */}
+      <div className="w-full max-w-4xl px-4 py-6 pb-24 sm:px-6 sm:pb-10 lg:px-8 lg:py-10">
         {/* ================= HEADER ================= */}
-        <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
-
+        <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:items-start sm:gap-6 sm:text-left">
           {/* Profile Image */}
           <img
             src={
@@ -49,19 +63,20 @@ const ProfilePage = () => {
             }
             alt={authUser?.fullName || "Profile"}
             className="
-              size-28
+              size-24
               shrink-0
               rounded-full
               object-cover
               ring-4 ring-base-100
+              sm:size-28
             "
           />
 
-          <div className="min-w-0 flex-1">
-
+          <div className="min-w-0 w-full flex-1">
             {/* Name */}
             <h1
               className="
+                break-words
                 font-display
                 text-2xl
                 text-base-content
@@ -83,8 +98,8 @@ const ProfilePage = () => {
                   sm:justify-start
                 "
               >
-                <MapPinIcon className="size-3.5" />
-                {authUser.location}
+                <MapPinIcon className="size-3.5 shrink-0" />
+                <span className="break-words">{authUser.location}</span>
               </p>
             )}
 
@@ -94,6 +109,7 @@ const ProfilePage = () => {
                 className="
                   mt-3
                   max-w-xl
+                  break-words
                   text-sm
                   leading-relaxed
                   text-base-content/60
@@ -103,7 +119,8 @@ const ProfilePage = () => {
               </p>
             )}
 
-            {/* Actions */}
+            {/* Actions: Message + Video call share a row on mobile,
+                Edit profile goes full width below */}
             <div
               className="
                 mt-5
@@ -114,10 +131,10 @@ const ProfilePage = () => {
               "
             >
               {/* Message */}
-              <button
+              {/* <button
                 type="button"
                 className="
-                  flex items-center gap-2
+                  flex flex-1 items-center justify-center gap-2
                   rounded-full
                   bg-primary
                   px-5 py-2.5
@@ -126,17 +143,18 @@ const ProfilePage = () => {
                   transition-all duration-200
                   hover:bg-primary/90
                   active:scale-[0.98]
+                  sm:flex-none
                 "
               >
                 <MessageSquareIcon className="size-4" />
                 Message
-              </button>
+              </button> */}
 
               {/* Video Call */}
-              <button
+              {/* <button
                 type="button"
                 className="
-                  flex items-center gap-2
+                  flex flex-1 items-center justify-center gap-2
                   rounded-full
                   border border-base-300
                   bg-base-100
@@ -147,23 +165,28 @@ const ProfilePage = () => {
                   hover:border-primary
                   hover:text-primary
                   active:scale-[0.98]
+                  sm:flex-none
                 "
               >
                 <VideoIcon className="size-4" />
                 Video call
-              </button>
+              </button> */}
 
               {/* Edit Profile */}
-              <Link to="/profile/edit"
+              <Link
+                to="/profile/edit"
                 className="
-                  flex items-center gap-1.5
+                  flex w-full items-center justify-center gap-1.5
                   rounded-full
+                  border border-primary/20
                   px-4 py-2.5
                   text-sm font-semibold
                   text-primary
                   transition-all duration-200
                   hover:bg-primary/10
                   hover:text-primary
+                  sm:w-auto
+                  sm:border-transparent
                 "
               >
                 <PencilIcon className="size-3.5" />
@@ -174,28 +197,30 @@ const ProfilePage = () => {
         </div>
 
         {/* ================= STATS ================= */}
-        <div className="mt-9 grid grid-cols-1 gap-4 sm:grid-cols-3">
-
+        {/* 3 compact columns on mobile instead of 3 tall stacked cards */}
+        <div className="mt-7 grid grid-cols-3 gap-2.5 sm:mt-9 sm:gap-4">
           {/* Friends */}
           <div
             className="
               rounded-2xl
               border border-base-300
               bg-base-100
-              p-5
+              p-3
               text-center
+              sm:p-5
             "
           >
-            <p className="font-display text-3xl text-primary">
+            <p className="font-display text-2xl text-primary sm:text-3xl">
               {friends.length}
             </p>
 
             <p
               className="
                 mt-1
-                text-xs font-medium
+                text-[10px] font-medium
                 uppercase tracking-wider
                 text-base-content/50
+                sm:text-xs
               "
             >
               Friends
@@ -208,23 +233,25 @@ const ProfilePage = () => {
               rounded-2xl
               border border-base-300
               bg-base-100
-              p-5
+              p-3
               text-center
+              sm:p-5
             "
           >
-            <p className="font-display text-3xl text-base-content/30">
-              —
+            <p className="font-display text-2xl text-primary sm:text-3xl">
+              {stats?.conversations ?? 0}
             </p>
 
             <p
               className="
                 mt-1
-                text-xs font-medium
+                text-[10px] font-medium
                 uppercase tracking-wider
                 text-base-content/50
+                sm:text-xs
               "
             >
-              Conversations
+              Chats
             </p>
           </div>
 
@@ -234,23 +261,25 @@ const ProfilePage = () => {
               rounded-2xl
               border border-base-300
               bg-base-100
-              p-5
+              p-3
               text-center
+              sm:p-5
             "
           >
-            <p className="font-display text-3xl text-base-content/30">
-              —
+            <p className="font-display text-2xl text-primary sm:text-3xl">
+              {practiceLabel}
             </p>
 
             <p
               className="
                 mt-1
-                text-xs font-medium
+                text-[10px] font-medium
                 uppercase tracking-wider
                 text-base-content/50
+                sm:text-xs
               "
             >
-              Practice hours
+              Hours
             </p>
           </div>
         </div>
@@ -259,11 +288,13 @@ const ProfilePage = () => {
         {(authUser?.nativeLanguage || authUser?.learningLanguage) && (
           <div
             className="
-              mt-8
+              mt-6
               rounded-[18px]
               border border-base-300
               bg-base-100
-              p-6
+              p-4
+              sm:mt-8
+              sm:p-6
             "
           >
             <h2
@@ -278,29 +309,30 @@ const ProfilePage = () => {
             </h2>
 
             <div className="space-y-2.5">
-
               {/* Native Language */}
               {authUser?.nativeLanguage && (
                 <div
                   className="
                     flex items-center
-                    justify-between
+                    justify-between gap-3
                     rounded-xl
                     border border-base-300
                     bg-base-200
-                    px-4 py-3
+                    px-3 py-3
+                    sm:px-4
                   "
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
                     {getLanguageFlag(authUser.nativeLanguage)}
 
-                    <span className="text-sm font-medium text-base-content">
+                    <span className="truncate text-sm font-medium text-base-content">
                       {capitialize(authUser.nativeLanguage)}
                     </span>
                   </div>
 
                   <span
                     className="
+                      shrink-0
                       rounded-full
                       border border-primary/20
                       bg-primary/10
@@ -320,23 +352,25 @@ const ProfilePage = () => {
                 <div
                   className="
                     flex items-center
-                    justify-between
+                    justify-between gap-3
                     rounded-xl
                     border border-base-300
                     bg-base-200
-                    px-4 py-3
+                    px-3 py-3
+                    sm:px-4
                   "
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
                     {getLanguageFlag(authUser.learningLanguage)}
 
-                    <span className="text-sm font-medium text-base-content">
+                    <span className="truncate text-sm font-medium text-base-content">
                       {capitialize(authUser.learningLanguage)}
                     </span>
                   </div>
 
                   <span
                     className="
+                      shrink-0
                       rounded-full
                       border border-base-300
                       bg-base-100
@@ -359,8 +393,59 @@ const ProfilePage = () => {
           About-me and Interests can be added once those fields
           are available from the API.
         */}
-
       </div>
+
+      {/* =====================================================
+          MOBILE BOTTOM NAVIGATION
+          Desktop: hidden
+      ===================================================== */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-base-300 bg-base-100 sm:hidden">
+        <div className="grid grid-cols-4 px-2 py-1.5">
+          {/* HOME */}
+          <Link
+            to="/"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-base-content/60 transition hover:text-primary"
+          >
+            <div className="flex size-8 items-center justify-center">
+              <HomeIcon className="size-[18px]" />
+            </div>
+            <span className="text-[9px] font-medium">Home</span>
+          </Link>
+
+          {/* FRIENDS */}
+          <Link
+            to="/friends"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-base-content/60 transition hover:text-primary"
+          >
+            <div className="flex size-8 items-center justify-center">
+              <UsersRoundIcon className="size-[18px]" />
+            </div>
+            <span className="text-[9px] font-medium">Friends</span>
+          </Link>
+
+          {/* NOTIFICATIONS */}
+          <Link
+            to="/notification"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-base-content/60 transition hover:text-primary"
+          >
+            <div className="flex size-8 items-center justify-center">
+              <BellIcon className="size-[18px]" />
+            </div>
+            <span className="text-[9px] font-medium">Notifications</span>
+          </Link>
+
+          {/* PROFILE (active) */}
+          <Link
+            to="/profile"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-primary"
+          >
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+              <UserIcon className="size-4" />
+            </div>
+            <span className="text-[9px] font-semibold">Profile</span>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 };

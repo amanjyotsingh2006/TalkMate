@@ -1,4 +1,4 @@
-
+import { Link } from "react-router";
 import { useThemeStore } from "../Store/useThemeStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acceptFriendRequest, getFriendRequests } from "../lib/api";
@@ -6,8 +6,12 @@ import { acceptFriendRequest, getFriendRequests } from "../lib/api";
 import {
   BellIcon,
   ClockIcon,
+  HomeIcon,
   MessageSquareIcon,
+  ShipWheelIcon,
   UserCheckIcon,
+  UserIcon,
+  UsersRoundIcon,
 } from "lucide-react";
 
 import NoNotificationsFound from "../components/NoNotificationsFound";
@@ -46,32 +50,37 @@ const NotificationPage = () => {
         w-full
         bg-base-200
         text-base-content
+        sm:pl-20
       "
     >
+      {/* sm:pl-20 leaves room for the desktop sidebar; on mobile there is
+          no sidebar, so content uses the full width */}
       <div
         className="
           relative z-10
-          ml-20
           w-full
           max-w-5xl
           px-4
-          py-8
+          py-6
+          pb-24
           sm:px-6
           sm:py-10
+          sm:pb-10
           lg:px-8
         "
       >
         {/* ================= HEADER ================= */}
-        <p className="mb-2 text-[13px] text-base-content/50">
+        <p className="mb-1 text-[12px] text-base-content/50 sm:mb-2 sm:text-[13px]">
           Stay in the loop
         </p>
 
         <h1
           className="
-            mb-9
+            mb-6
             font-display
-            text-3xl
+            text-2xl
             text-base-content
+            sm:mb-9
             sm:text-4xl
           "
         >
@@ -86,7 +95,7 @@ const NotificationPage = () => {
           <>
             {/* ================= INCOMING FRIEND REQUESTS ================= */}
             {incomingRequests.length > 0 && (
-              <section className="mb-10 space-y-3">
+              <section className="mb-8 space-y-3 sm:mb-10">
                 <h2
                   className="
                     mb-1
@@ -127,15 +136,15 @@ const NotificationPage = () => {
                       border-l-4 border-l-primary
                       border-r border-t border-b border-base-300
                       bg-base-100
-                      p-4
+                      p-3
                       transition-all duration-200
                       hover:border-r-primary/30
                       hover:border-t-primary/30
                       hover:border-b-primary/30
+                      sm:p-4
                     "
                   >
                     <div className="flex items-start gap-3">
-
                       {/* Avatar */}
                       <div
                         className="
@@ -147,7 +156,7 @@ const NotificationPage = () => {
                           p-0.5
                         "
                       >
-                        <div className="size-11 overflow-hidden rounded-full bg-base-100">
+                        <div className="size-10 overflow-hidden rounded-full bg-base-100 sm:size-11">
                           <img
                             src={request.sender.profilePic}
                             alt={request.sender.fullName}
@@ -159,28 +168,32 @@ const NotificationPage = () => {
 
                       {/* Content */}
                       <div className="min-w-0 flex-1">
-                        <p className="text-[14px] leading-snug text-base-content">
+                        <p className="break-words text-[14px] leading-snug text-base-content">
                           <span className="font-semibold">
                             {request.sender.fullName}
                           </span>{" "}
                           sent you a friend request
                         </p>
 
-                        <p className="mt-1 text-[12px] text-base-content/50">
+                        <p className="mt-1 break-words text-[12px] text-base-content/50">
                           Native: {request.sender.nativeLanguage} · Learning:{" "}
                           {request.sender.learningLanguage}
                         </p>
 
-                        {/* Actions */}
+                        {/* Time (mobile: under the text) */}
+                        <p className="mt-1 text-[11px] text-base-content/40 sm:hidden">
+                          Recently
+                        </p>
+
+                        {/* Actions: full-width halves on mobile */}
                         <div className="mt-3 flex gap-2">
                           <button
                             type="button"
-                            onClick={() =>
-                              acceptRequestMutation(request._id)
-                            }
+                            onClick={() => acceptRequestMutation(request._id)}
                             disabled={isPending}
                             className="
-                              h-8
+                              h-9
+                              flex-1
                               rounded-full
                               bg-primary
                               px-4
@@ -193,6 +206,8 @@ const NotificationPage = () => {
                               disabled:cursor-not-allowed
                               disabled:bg-base-300
                               disabled:text-base-content/40
+                              sm:h-8
+                              sm:flex-none
                             "
                           >
                             Accept
@@ -202,7 +217,8 @@ const NotificationPage = () => {
                             type="button"
                             onClick={() => handleDecline(request._id)}
                             className="
-                              h-8
+                              h-9
+                              flex-1
                               rounded-full
                               border border-base-300
                               bg-base-100
@@ -215,6 +231,8 @@ const NotificationPage = () => {
                               hover:bg-error/10
                               hover:text-error
                               active:scale-95
+                              sm:h-8
+                              sm:flex-none
                             "
                           >
                             Decline
@@ -222,12 +240,14 @@ const NotificationPage = () => {
                         </div>
                       </div>
 
-                      {/* Time */}
+                      {/* Time (desktop: right side) */}
                       <span
                         className="
+                          hidden
                           shrink-0
                           text-[11px]
                           text-base-content/40
+                          sm:block
                         "
                       >
                         Recently
@@ -262,15 +282,15 @@ const NotificationPage = () => {
                       rounded-2xl
                       border border-base-300
                       bg-base-100
-                      p-4
+                      p-3
                       transition-all duration-200
-                      hover:-translate-y-0.5
                       hover:border-primary/30
-                      hover:shadow-lg
+                      sm:p-4
+                      sm:hover:-translate-y-0.5
+                      sm:hover:shadow-lg
                     "
                   >
                     <div className="flex items-center gap-3">
-
                       {/* Avatar */}
                       <div
                         className="
@@ -282,7 +302,7 @@ const NotificationPage = () => {
                           p-0.5
                         "
                       >
-                        <div className="size-11 overflow-hidden rounded-full bg-base-100">
+                        <div className="size-10 overflow-hidden rounded-full bg-base-100 sm:size-11">
                           <img
                             src={notification.recipient.profilePic}
                             alt={notification.recipient.fullName}
@@ -296,6 +316,7 @@ const NotificationPage = () => {
                       <div className="min-w-0 flex-1">
                         <p
                           className="
+                            break-words
                             text-[14px]
                             leading-snug
                             text-base-content
@@ -320,7 +341,7 @@ const NotificationPage = () => {
                         </p>
                       </div>
 
-                      {/* New Friend Badge */}
+                      {/* New Friend Badge: icon-only on mobile */}
                       <span
                         className="
                           flex shrink-0
@@ -328,14 +349,16 @@ const NotificationPage = () => {
                           rounded-full
                           border border-primary/20
                           bg-primary/10
-                          px-3 py-1.5
+                          p-2
                           text-[11px]
                           font-semibold
                           text-primary
+                          sm:px-3
+                          sm:py-1.5
                         "
                       >
-                        <MessageSquareIcon className="size-3" />
-                        New friend
+                        <MessageSquareIcon className="size-3.5 sm:size-3" />
+                        <span className="hidden sm:inline">New friend</span>
                       </span>
                     </div>
                   </div>
@@ -345,12 +368,125 @@ const NotificationPage = () => {
 
             {/* ================= EMPTY STATE ================= */}
             {incomingRequests.length === 0 &&
-              acceptedRequests.length === 0 && (
-                <NoNotificationsFound />
-              )}
+              acceptedRequests.length === 0 && <NoNotificationsFound />}
           </>
         )}
       </div>
+
+      {/* =====================================================
+          MOBILE BOTTOM NAVIGATION
+          Desktop: hidden
+      ===================================================== */}
+      <nav
+        className="
+          fixed
+          bottom-0
+          left-0
+          right-0
+          z-50
+          border-t
+          border-base-300
+          bg-base-100
+          sm:hidden
+        "
+      >
+        <div className="grid grid-cols-4 px-2 py-1.5">
+          {/* HOME */}
+          <Link
+            to="/"
+            className="
+              flex
+              flex-col
+              items-center
+              justify-center
+              gap-1
+              rounded-xl
+              py-1.5
+              text-base-content/60
+              transition
+              hover:text-primary
+            "
+          >
+            <div className="flex size-8 items-center justify-center">
+              <HomeIcon className="size-[18px]" />
+            </div>
+            <span className="text-[9px] font-medium">Home</span>
+          </Link>
+
+          {/* FRIENDS */}
+          <Link
+            to="/friends"
+            className="
+              flex
+              flex-col
+              items-center
+              justify-center
+              gap-1
+              rounded-xl
+              py-1.5
+              text-base-content/60
+              transition
+              hover:text-primary
+            "
+          >
+            <div className="flex size-8 items-center justify-center">
+              <UsersRoundIcon className="size-[18px]" />
+            </div>
+            <span className="text-[9px] font-medium">Friends</span>
+          </Link>
+
+          {/* NOTIFICATIONS (active) */}
+          <Link
+            to="/notification"
+            className="
+              flex
+              flex-col
+              items-center
+              justify-center
+              gap-1
+              rounded-xl
+              py-1.5
+              text-primary
+            "
+          >
+            <div
+              className="
+                flex
+                size-8
+                items-center
+                justify-center
+                rounded-lg
+                bg-primary/10
+              "
+            >
+              <BellIcon className="size-4" />
+            </div>
+            <span className="text-[9px] font-semibold">Notifications</span>
+          </Link>
+
+          {/* PROFILE */}
+          <Link
+            to="/profile"
+            className="
+              flex
+              flex-col
+              items-center
+              justify-center
+              gap-1
+              rounded-xl
+              py-1.5
+              text-base-content/60
+              transition
+              hover:text-primary
+            "
+          >
+            <div className="flex size-8 items-center justify-center">
+              <UserIcon className="size-[18px]" />
+            </div>
+            <span className="text-[9px] font-medium">Profile</span>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 };
