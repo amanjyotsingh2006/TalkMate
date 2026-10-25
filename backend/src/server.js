@@ -17,6 +17,7 @@ app.use(cors({
     origin: [
         "https://talkmate-frontend-kohl.vercel.app",
         "https://talkmate-frontend-maxz1ft0d-grace-2362.vercel.app",
+        "https://talkmate-frontend-99itxhpwt-grace-2362.vercel.app/"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
