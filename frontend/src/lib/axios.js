@@ -1,6 +1,6 @@
 import axios from "axios";
 
 export const axiosInstance = axios.create({
-  baseURL: ["https://talkmate-backend.vercel.app/api", "https://talkmate-backend-9mpuqmj5k-grace-2362.vercel.app/"],
+  baseURL: import.meta.env.VITE_API_URL || "https://talkmate-backend.vercel.app/api",
   withCredentials: true,
 });
