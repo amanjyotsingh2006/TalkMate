@@ -89,41 +89,31 @@ export async function login(req, res) {
         }
 
         const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(400).json({ message: "Invalid email or password" });
-        }
+        if (!user) return res.status(400).json({ message: "Invalid email or password" });
 
         if (!user.password) {
-            return res.status(400).json({
-                message: "This account uses Google Login. Please continue with Google.",
-            });
+            return res.status(400).json({ message: "This account uses Google Login. Please continue with Google." })
         }
 
-        const isPasswordCorrect = await user.matchPassword(password);
+        const isPasswordCorrect = await user.matchPassword(password)
+        if (!isPasswordCorrect) return res.status(401).json({ message: "Invalid email or password" });
 
-        if (!isPasswordCorrect) {
-            return res.status(401).json({ message: "Invalid email or password" });
-        }
-
-        const token = jwt.sign(
-            { userId: user._id },
-            process.env.JWT_SECRET_KEY,
-            { expiresIn: "7d" }
-        );
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "7d" });
 
         res.cookie("jwt", token, {
             maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true,
-            sameSite: "none",
-            secure: true,
+            sameSite: true,
+            secure: process.env.NODE_ENV === "production"
         });
 
-        return res.status(200).json({ success: true, user });
+        res.status(200).json({ success: true, user });
+
     } catch (error) {
-        console.error("LOGIN ERROR:", error.stack || error);
-        return res.status(500).json({ message: "Internal Server Error" });
+        console.log("Error in login controller", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
     }
+
 }
 
 
@@ -273,84 +263,84 @@ export async function onboard(req, res) {
 
 // Forgot Password Logic
 export async function forgotPassword(req, res) {
-    try {
-        const { email } = req.body;
+  try {
+    const { email } = req.body;
 
-        if (!email) {
-            return res.status(400).json({ message: "Email is required" });
-        }
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
 
-        const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-        // Always send the same response so attackers can't tell
-        // which emails are registered
-        if (user) {
-            const resetToken = crypto.randomBytes(32).toString("hex");
+    // Always send the same response so attackers can't tell
+    // which emails are registered
+    if (user) {
+      const resetToken = crypto.randomBytes(32).toString("hex");
 
-            user.resetPasswordToken = crypto
-                .createHash("sha256")
-                .update(resetToken)
-                .digest("hex");
-            user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 min
-            await user.save();
+      user.resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+      user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 min
+      await user.save();
 
-            const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+      const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-            await sendEmail({
-                to: user.email,
-                subject: "Reset your Streamify password",
-                html: `
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your Streamify password",
+        html: `
           <p>Hi ${user.fullName},</p>
           <p>Click the link below to reset your password. It expires in 15 minutes.</p>
           <p><a href="${resetUrl}">Reset password</a></p>
           <p>If you didn't request this, you can ignore this email.</p>
         `,
-            });
-        }
-
-        res.status(200).json({
-            message: "If that email exists, a reset link has been sent.",
-        });
-    } catch (error) {
-        console.error("Error in forgotPassword:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+      });
     }
+
+    res.status(200).json({
+      message: "If that email exists, a reset link has been sent.",
+    });
+  } catch (error) {
+    console.error("Error in forgotPassword:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 }
 
 
 // Reset Password Logic
 export async function resetPassword(req, res) {
-    try {
-        const { token } = req.params;
-        const { password } = req.body;
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
 
-        if (!password || password.length < 6) {
-            return res
-                .status(400)
-                .json({ message: "Password must be at least 6 characters" });
-        }
-
-        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-        const user = await User.findOne({
-            resetPasswordToken: hashedToken,
-            resetPasswordExpires: { $gt: Date.now() },
-        });
-
-        if (!user) {
-            return res
-                .status(400)
-                .json({ message: "Reset link is invalid or has expired" });
-        }
-
-        user.password = password; // hashed by your pre("save") hook
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
-        await user.save();
-
-        res.status(200).json({ message: "Password reset successful" });
-    } catch (error) {
-        console.error("Error in resetPassword:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+    if (!password || password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
     }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Reset link is invalid or has expired" });
+    }
+
+    user.password = password; // hashed by your pre("save") hook
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Error in resetPassword:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 }
