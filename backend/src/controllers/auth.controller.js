@@ -13,6 +13,14 @@ const googleClient = new OAuth2Client(
 );
 
 
+const isProd = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
+};
 
 // SignUp Logic
 export async function signup(req, res) {
@@ -64,12 +72,8 @@ export async function signup(req, res) {
             expiresIn: "7d"
         })
 
-        res.cookie("jwt", token, {
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            httpOnly: true,
-            sameSite: true,
-            secure: process.env.NODE_ENV === "production"
-        })
+        res.cookie("jwt", token, cookieOptions);
+        // googleLogin: res.cookie("jwt", accessToken, cookieOptions);
 
         res.status(201).json({ success: true, user: newUser })
     } catch (error) {
@@ -100,12 +104,8 @@ export async function login(req, res) {
 
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "7d" });
 
-        res.cookie("jwt", token, {
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            httpOnly: true,
-            sameSite: true,
-            secure: process.env.NODE_ENV === "production"
-        });
+        res.cookie("jwt", token, cookieOptions);
+        // googleLogin: res.cookie("jwt", accessToken, cookieOptions);
 
         res.status(200).json({ success: true, user });
 
@@ -120,8 +120,12 @@ export async function login(req, res) {
 
 // Logout Logic
 export function logout(req, res) {
-    res.clearCookie("jwt");
-    res.status(200).json({ success: true, message: "Logout Successfully" })
+    res.clearCookie("jwt", {
+        httpOnly: true,
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
+    });
+    res.status(200).json({ success: true, message: "Logout Successfully" });
 }
 
 
@@ -256,91 +260,92 @@ export async function onboard(req, res) {
             console.log("Error updating Stream user during onboarding:", streamError.message);
         }
     } catch (error) {
-
+        console.log("Error in onboard controller:", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 }
 
 
 // Forgot Password Logic
 export async function forgotPassword(req, res) {
-  try {
-    const { email } = req.body;
+    try {
+        const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
 
-    const user = await User.findOne({ email });
+        const user = await User.findOne({ email });
 
-    // Always send the same response so attackers can't tell
-    // which emails are registered
-    if (user) {
-      const resetToken = crypto.randomBytes(32).toString("hex");
+        // Always send the same response so attackers can't tell
+        // which emails are registered
+        if (user) {
+            const resetToken = crypto.randomBytes(32).toString("hex");
 
-      user.resetPasswordToken = crypto
-        .createHash("sha256")
-        .update(resetToken)
-        .digest("hex");
-      user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 min
-      await user.save();
+            user.resetPasswordToken = crypto
+                .createHash("sha256")
+                .update(resetToken)
+                .digest("hex");
+            user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 min
+            await user.save();
 
-      const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+            const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-      await sendEmail({
-        to: user.email,
-        subject: "Reset your Streamify password",
-        html: `
+            await sendEmail({
+                to: user.email,
+                subject: "Reset your Streamify password",
+                html: `
           <p>Hi ${user.fullName},</p>
           <p>Click the link below to reset your password. It expires in 15 minutes.</p>
           <p><a href="${resetUrl}">Reset password</a></p>
           <p>If you didn't request this, you can ignore this email.</p>
         `,
-      });
-    }
+            });
+        }
 
-    res.status(200).json({
-      message: "If that email exists, a reset link has been sent.",
-    });
-  } catch (error) {
-    console.error("Error in forgotPassword:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
+        res.status(200).json({
+            message: "If that email exists, a reset link has been sent.",
+        });
+    } catch (error) {
+        console.error("Error in forgotPassword:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 }
 
 
 // Reset Password Logic
 export async function resetPassword(req, res) {
-  try {
-    const { token } = req.params;
-    const { password } = req.body;
+    try {
+        const { token } = req.params;
+        const { password } = req.body;
 
-    if (!password || password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters" });
+        if (!password || password.length < 6) {
+            return res
+                .status(400)
+                .json({ message: "Password must be at least 6 characters" });
+        }
+
+        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res
+                .status(400)
+                .json({ message: "Reset link is invalid or has expired" });
+        }
+
+        user.password = password; // hashed by your pre("save") hook
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+        console.error("Error in resetPassword:", error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Reset link is invalid or has expired" });
-    }
-
-    user.password = password; // hashed by your pre("save") hook
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    await user.save();
-
-    res.status(200).json({ message: "Password reset successful" });
-  } catch (error) {
-    console.error("Error in resetPassword:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
 }
