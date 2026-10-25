@@ -14,7 +14,10 @@ const app = express();
 const PORT = process.env.PORT;
 
 app.use(cors({
-    origin: "https://talkmate-frontend-kohl.vercel.app",
+    origin: [
+        "https://talkmate-frontend-kohl.vercel.app",
+        "https://talkmate-frontend-maxz1ft0d-grace-2362.vercel.app",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
