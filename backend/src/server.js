@@ -32,7 +32,8 @@ app.use("/api/users", userRoutes)
 app.use("/api/chat", chatRoutes)
 app.use("/api/ai", aiRoutes)
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    connectDB();
-})
+connectDB();   // runs at startup on Vercel too
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+}
