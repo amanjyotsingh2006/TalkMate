@@ -19,6 +19,8 @@ import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import FileViewer from "./pages/FileViewer";
 import LandingPage from "./pages/landingPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 const App = () => {
   const { isLoading, authUser } = useAuthUser();
@@ -86,6 +88,9 @@ const App = () => {
             )
           }
         />
+
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
         <Route
           path="/onboarding"

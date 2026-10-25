@@ -79,8 +79,8 @@ const CallPage = () => {
     initCall();
 
     return () => {
-      callInstance?.leave().catch(() => {});
-      videoClient?.disconnectUser().catch(() => {});
+      callInstance?.leave().catch(() => { });
+      videoClient?.disconnectUser().catch(() => { });
     };
   }, [authUser, callId, tokenData]);
 
@@ -293,16 +293,32 @@ const CallTimer = () => {
 
 const CallContent = () => {
   const { useCallCallingState } = useCallStateHooks();
-
   const callingState = useCallCallingState();
 
   const navigate = useNavigate();
+  const { id: callId } = useParams();
+  const { authUser } = useAuthUser();
 
   useEffect(() => {
-    if (callingState === CallingState.LEFT) {
-      navigate("/", { replace: true });
-    }
-  }, [callingState, navigate]);
+    if (callingState !== CallingState.LEFT) return;
+
+    // callId is "userA-userB", so the other person is the id that isn't mine
+    const otherUserId = callId
+      ?.split("-")
+      .find((id) => id !== authUser?._id);
+
+    const chatPath = otherUserId ? `/chat/${otherUserId}` : "/";
+
+    // 1. Try to close this tab (works when it was opened from a link or window.open)
+    window.close();
+
+    // 2. If the browser blocked it, the tab is still here, so redirect
+    const timer = setTimeout(() => {
+      navigate(chatPath, { replace: true });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [callingState, callId, authUser, navigate]);
 
   return (
     <StreamTheme className="h-full w-full">
@@ -314,23 +330,27 @@ const CallContent = () => {
         </div>
 
         {/* ================= CONTROLS ================= */}
-        {/* Centered, never wider than the screen; scrolls sideways
-            if a very narrow phone can't fit every button */}
+        {/* No overflow clipping here, so the reactions popup
+            can open above the button. On narrow screens the
+            buttons wrap onto extra rows instead of scrolling. */}
 
         <div
           className="
             absolute
-            bottom-3
-            left-1/2
+            inset-x-0
+            bottom-0
             z-50
-            max-w-[calc(100%-1rem)]
-            -translate-x-1/2
-            overflow-x-auto
-            pb-[env(safe-area-inset-bottom)]
-            sm:bottom-5
-            sm:max-w-none
-            sm:overflow-visible
-            sm:pb-0
+            flex
+            justify-center
+            px-2
+            pb-[max(0.75rem,env(safe-area-inset-bottom))]
+            sm:bottom-2
+            sm:pb-3
+
+            [&_.str-video__call-controls]:flex-wrap
+            [&_.str-video__call-controls]:justify-center
+            [&_.str-video__call-controls]:gap-1.5
+            [&_.str-video__call-controls]:max-w-full
           "
         >
           <CallControls />
