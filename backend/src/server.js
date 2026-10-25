@@ -16,8 +16,7 @@ const PORT = process.env.PORT;
 app.use(cors({
     origin: [
         "https://talkmate-frontend-kohl.vercel.app",
-        "https://talkmate-frontend-maxz1ft0d-grace-2362.vercel.app",
-        "https://talkmate-frontend-99itxhpwt-grace-2362.vercel.app/"
+        "http://localhost:5173"   // for local development
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -35,5 +34,7 @@ app.use("/api/ai", aiRoutes)
 connectDB();   // runs at startup on Vercel too
 
 if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+    app.listen(PORT, () => console.log(`Server running on ${PORT}`));
 }
+
+export default app;
