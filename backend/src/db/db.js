@@ -1,10 +1,22 @@
 import mongoose from "mongoose";
 
+const cached = global._mongoose || (global._mongoose = { conn: null, promise: null });
+
 export const connectDB = async () => {
-    try {
-        const conn = await mongoose.connect(process.env.MONGO_URL);
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
-    } catch (error) {
-        console.log("Error connecting to MongoDB: ", error);
+    if (cached.conn && mongoose.connection.readyState === 1) return cached.conn;
+
+    if (!cached.promise) {
+        cached.promise = mongoose
+            .connect(process.env.MONGO_URL, {
+                serverSelectionTimeoutMS: 8000,
+                maxPoolSize: 5,
+            })
+            .catch((err) => {
+                cached.promise = null; // allow retry on next request
+                throw err;
+            });
     }
-}
+
+    cached.conn = await cached.promise;
+    return cached.conn;
+};

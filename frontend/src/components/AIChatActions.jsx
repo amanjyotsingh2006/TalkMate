@@ -70,60 +70,21 @@ const AIChatActions = () => {
 
     setLoadingAction(action);
 
+    let data;
     try {
-      const response = await fetch("/api/ai/assist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action,
-          text: message,
-          targetLanguage,
-          conversationContext,
-        }),
+      const res = await axiosInstance.post("/ai/assist", {
+        action,
+        text: message,
+        targetLanguage,
+        conversationContext,
       });
+      data = res.data;
+    } catch (err) {
+      throw new Error(err.response?.data?.message || "AI request failed.");
+    }
 
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || "AI request failed."
-        );
-      }
-
-      if (!data.result?.trim()) {
-        throw new Error("The AI returned an empty response.");
-      }
-
-      if (action === "suggest") {
-        const choices = data.result
-          .split("\n")
-          .map((line) =>
-            line.replace(/^\s*(?:\d+[.)]|[-*])\s*/, "").trim()
-          )
-          .filter(Boolean)
-          .slice(0, 3);
-
-        if (!choices.length) {
-          throw new Error("No reply suggestions were generated.");
-        }
-
-        setSuggestions(choices);
-        toast.success("Choose a reply suggestion.");
-      } else {
-        composer.textComposer.setText(data.result.trim());
-        toast.success(
-          action === "translate"
-            ? "Translation completed."
-            : "Grammar corrected."
-        );
-      }
-    } catch (error) {
-      console.error("AI action error:", error);
-      toast.error(error.message || "AI action failed.");
-    } finally {
-      setLoadingAction("");
+    if (!data.result?.trim()) {
+      throw new Error("The AI returned an empty response.");
     }
   };
 

@@ -14,6 +14,28 @@ import {
 
 import { useThemeStore } from "../Store/useThemeStore.js";
 import useAuthUser from "../hooks/useAuthUser.js";
+import { axiosInstance } from "../lib/axios.js";
+
+const LANGUAGE_OPTIONS = [
+    "English",
+    "Hindi",
+    "Marathi",
+    "Gujarati",
+    "Bengali",
+    "Tamil",
+    "Telugu",
+    "Kannada",
+    "Malayalam",
+    "Punjabi",
+    "Urdu",
+    "French",
+    "Spanish",
+    "German",
+    "Japanese",
+    "Chinese",
+    "Korean",
+    "Other",
+];
 
 const EditProfilePage = () => {
     const navigate = useNavigate();
@@ -38,9 +60,7 @@ const EditProfilePage = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    // --------------------------------------------------
     // Load existing user data into the form
-    // --------------------------------------------------
     useEffect(() => {
         if (!authUser) return;
 
@@ -55,9 +75,7 @@ const EditProfilePage = () => {
         setProfilePic(authUser.profilePic || "");
     }, [authUser]);
 
-    // --------------------------------------------------
     // Handle text/select input changes
-    // --------------------------------------------------
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -70,23 +88,17 @@ const EditProfilePage = () => {
         setSuccess("");
     };
 
-    // --------------------------------------------------
-    // Handle profile picture
-    // --------------------------------------------------
+    // Generate a new random avatar
     const handleGenerateAvatar = () => {
         const randomSeed = Math.floor(Math.random() * 100000);
-
         const randomAvatar = `https://api.dicebear.com/9.x/adventurer/svg?seed=${randomSeed}`;
 
         setProfilePic(randomAvatar);
-
         setSuccess("");
         setError("");
     };
 
-    // --------------------------------------------------
     // Save profile
-    // --------------------------------------------------
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -111,32 +123,15 @@ const EditProfilePage = () => {
         try {
             setSaving(true);
 
-            const response = await fetch(
-                "http://localhost:5002/api/users/profile",
-                {
-                    method: "PUT",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        fullName: formData.fullName,
-                        location: formData.location,
-                        bio: formData.bio,
-                        nativeLanguage: formData.nativeLanguage,
-                        learningLanguage: formData.learningLanguage,
-                        profilePic: profilePic,
-                    }),
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data?.message || "Failed to update profile."
-                );
-            }
+            // axios throws automatically on non-2xx responses
+            await axiosInstance.put("/users/profile", {
+                fullName: formData.fullName,
+                location: formData.location,
+                bio: formData.bio,
+                nativeLanguage: formData.nativeLanguage,
+                learningLanguage: formData.learningLanguage,
+                profilePic: profilePic,
+            });
 
             setSuccess("Profile updated successfully!");
 
@@ -152,6 +147,7 @@ const EditProfilePage = () => {
             console.error("Update profile error:", err);
 
             setError(
+                err.response?.data?.message ||
                 err.message ||
                 "Something went wrong while updating your profile."
             );
@@ -160,9 +156,7 @@ const EditProfilePage = () => {
         }
     };
 
-    // --------------------------------------------------
     // Loading
-    // --------------------------------------------------
     if (isLoading) {
         return (
             <div
@@ -170,11 +164,7 @@ const EditProfilePage = () => {
                 className="min-h-screen bg-base-200 text-base-content flex items-center justify-center"
             >
                 <div className="flex flex-col items-center gap-3">
-                    <Loader2
-                        size={32}
-                        className="animate-spin text-primary"
-                    />
-
+                    <Loader2 size={32} className="animate-spin text-primary" />
                     <p className="text-base-content/60">
                         Loading your profile...
                     </p>
@@ -183,9 +173,7 @@ const EditProfilePage = () => {
         );
     }
 
-    // --------------------------------------------------
     // No authenticated user
-    // --------------------------------------------------
     if (!authUser) {
         return (
             <div
@@ -218,10 +206,7 @@ const EditProfilePage = () => {
             className="min-h-screen bg-base-200 text-base-content"
         >
             <div className="max-w-4xl mx-auto px-4 py-8">
-                {/* -------------------------------------------- */}
                 {/* Header */}
-                {/* -------------------------------------------- */}
-
                 <div className="flex items-center gap-4 mb-8">
                     <button
                         type="button"
@@ -235,30 +220,19 @@ const EditProfilePage = () => {
                         <h1 className="text-2xl md:text-3xl font-bold">
                             Edit Profile
                         </h1>
-
                         <p className="text-base-content/60 mt-1">
                             Update your profile information
                         </p>
                     </div>
                 </div>
 
-                {/* -------------------------------------------- */}
                 {/* Main Card */}
-                {/* -------------------------------------------- */}
-
                 <div className="bg-base-100 border border-base-300 rounded-2xl shadow-sm">
                     <form
                         onSubmit={handleSubmit}
                         className="p-5 md:p-8 space-y-8"
                     >
-                        {/* ---------------------------------------- */}
-                        {/* Profile Picture */}
-                        {/* ---------------------------------------- */}
-
-                        {/* ---------------------------------------- */}
                         {/* Profile Avatar */}
-                        {/* ---------------------------------------- */}
-
                         <div className="flex flex-col items-center">
                             <div className="relative">
                                 <div className="w-32 h-32 rounded-full overflow-hidden bg-base-200 border-4 border-base-300">
@@ -295,32 +269,22 @@ const EditProfilePage = () => {
                             </div>
                         </div>
 
-                        {/* ---------------------------------------- */}
                         {/* Error Message */}
-                        {/* ---------------------------------------- */}
-
                         {error && (
                             <div className="alert alert-error">
                                 <span>{error}</span>
                             </div>
                         )}
 
-                        {/* ---------------------------------------- */}
                         {/* Success Message */}
-                        {/* ---------------------------------------- */}
-
                         {success && (
                             <div className="alert alert-success">
                                 <Check size={18} />
-
                                 <span>{success}</span>
                             </div>
                         )}
 
-                        {/* ---------------------------------------- */}
                         {/* Personal Information */}
-                        {/* ---------------------------------------- */}
-
                         <div>
                             <h2 className="text-lg font-semibold mb-5">
                                 Personal Information
@@ -334,9 +298,7 @@ const EditProfilePage = () => {
                                         className="block text-sm font-medium mb-2"
                                     >
                                         Full Name
-                                        <span className="text-error ml-1">
-                                            *
-                                        </span>
+                                        <span className="text-error ml-1">*</span>
                                     </label>
 
                                     <div className="relative">
@@ -413,10 +375,7 @@ const EditProfilePage = () => {
                             </div>
                         </div>
 
-                        {/* ---------------------------------------- */}
                         {/* Language Information */}
-                        {/* ---------------------------------------- */}
-
                         <div className="border-t border-base-300 pt-8">
                             <h2 className="text-lg font-semibold mb-5">
                                 Language Information
@@ -430,9 +389,7 @@ const EditProfilePage = () => {
                                         className="block text-sm font-medium mb-2"
                                     >
                                         Native Language
-                                        <span className="text-error ml-1">
-                                            *
-                                        </span>
+                                        <span className="text-error ml-1">*</span>
                                     </label>
 
                                     <select
@@ -448,71 +405,11 @@ const EditProfilePage = () => {
                                             </option>
                                         )}
 
-                                        <option value="English">
-                                            English
-                                        </option>
-
-                                        <option value="Hindi">Hindi</option>
-
-                                        <option value="Marathi">
-                                            Marathi
-                                        </option>
-
-                                        <option value="Gujarati">
-                                            Gujarati
-                                        </option>
-
-                                        <option value="Bengali">
-                                            Bengali
-                                        </option>
-
-                                        <option value="Tamil">
-                                            Tamil
-                                        </option>
-
-                                        <option value="Telugu">
-                                            Telugu
-                                        </option>
-
-                                        <option value="Kannada">
-                                            Kannada
-                                        </option>
-
-                                        <option value="Malayalam">
-                                            Malayalam
-                                        </option>
-
-                                        <option value="Punjabi">
-                                            Punjabi
-                                        </option>
-
-                                        <option value="Urdu">Urdu</option>
-
-                                        <option value="French">
-                                            French
-                                        </option>
-
-                                        <option value="Spanish">
-                                            Spanish
-                                        </option>
-
-                                        <option value="German">
-                                            German
-                                        </option>
-
-                                        <option value="Japanese">
-                                            Japanese
-                                        </option>
-
-                                        <option value="Chinese">
-                                            Chinese
-                                        </option>
-
-                                        <option value="Korean">
-                                            Korean
-                                        </option>
-
-                                        <option value="Other">Other</option>
+                                        {LANGUAGE_OPTIONS.map((lang) => (
+                                            <option key={lang} value={lang}>
+                                                {lang}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
 
@@ -523,9 +420,7 @@ const EditProfilePage = () => {
                                         className="block text-sm font-medium mb-2"
                                     >
                                         Learning Language
-                                        <span className="text-error ml-1">
-                                            *
-                                        </span>
+                                        <span className="text-error ml-1">*</span>
                                     </label>
 
                                     <select
@@ -541,80 +436,17 @@ const EditProfilePage = () => {
                                             </option>
                                         )}
 
-                                        <option value="English">
-                                            English
-                                        </option>
-
-                                        <option value="Hindi">Hindi</option>
-
-                                        <option value="Marathi">
-                                            Marathi
-                                        </option>
-
-                                        <option value="Gujarati">
-                                            Gujarati
-                                        </option>
-
-                                        <option value="Bengali">
-                                            Bengali
-                                        </option>
-
-                                        <option value="Tamil">
-                                            Tamil
-                                        </option>
-
-                                        <option value="Telugu">
-                                            Telugu
-                                        </option>
-
-                                        <option value="Kannada">
-                                            Kannada
-                                        </option>
-
-                                        <option value="Malayalam">
-                                            Malayalam
-                                        </option>
-
-                                        <option value="Punjabi">
-                                            Punjabi
-                                        </option>
-
-                                        <option value="Urdu">Urdu</option>
-
-                                        <option value="French">
-                                            French
-                                        </option>
-
-                                        <option value="Spanish">
-                                            Spanish
-                                        </option>
-
-                                        <option value="German">
-                                            German
-                                        </option>
-
-                                        <option value="Japanese">
-                                            Japanese
-                                        </option>
-
-                                        <option value="Chinese">
-                                            Chinese
-                                        </option>
-
-                                        <option value="Korean">
-                                            Korean
-                                        </option>
-
-                                        <option value="Other">Other</option>
+                                        {LANGUAGE_OPTIONS.map((lang) => (
+                                            <option key={lang} value={lang}>
+                                                {lang}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        {/* ---------------------------------------- */}
                         {/* Buttons */}
-                        {/* ---------------------------------------- */}
-
                         <div className="border-t border-base-300 pt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
                             <button
                                 type="button"
@@ -636,13 +468,11 @@ const EditProfilePage = () => {
                                             size={18}
                                             className="animate-spin"
                                         />
-
                                         Saving...
                                     </>
                                 ) : (
                                     <>
                                         <Save size={18} />
-
                                         Save Changes
                                     </>
                                 )}

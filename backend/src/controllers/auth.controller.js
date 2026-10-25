@@ -1,6 +1,6 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import { upsertStreamUser } from "../db/stream.js"
+import { upsertStreamUser } from "../db/stream.js";
 
 import { OAuth2Client } from "google-auth-library";
 import { generateAccessToken } from "../utils/generateToken.js";
@@ -8,10 +8,7 @@ import { generateAccessToken } from "../utils/generateToken.js";
 import crypto from "crypto";
 import { sendEmail } from "../utils/sendEmail.js";
 
-const googleClient = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID
-);
-
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -41,27 +38,27 @@ export async function signup(req, res) {
             return res.status(400).json({ message: "Invalid Email Format" });
         }
 
-        const existingUser = await User.findOne({ email })
+        const existingUser = await User.findOne({ email });
 
         if (existingUser) {
             return res.status(400).json({ message: "Email already exist, please use a different one" });
         }
 
         const idx = Math.floor(Math.random() * 1000) + 1;
-        const randomAvatar = `https://api.dicebear.com/9.x/adventurer/svg?seed=${idx}`
+        const randomAvatar = `https://api.dicebear.com/9.x/adventurer/svg?seed=${idx}`;
 
         const newUser = await User.create({
             email,
             fullName,
             password,
-            profilePic: randomAvatar
+            profilePic: randomAvatar,
         });
 
         try {
             await upsertStreamUser({
                 id: newUser._id.toString(),
                 name: newUser.fullName,
-                profilePic: newUser.profilePic || ""
+                profilePic: newUser.profilePic || "",
             });
             console.log(`Stream user created for ${newUser.fullName}`);
         } catch (error) {
@@ -69,19 +66,19 @@ export async function signup(req, res) {
         }
 
         const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET_KEY, {
-            expiresIn: "7d"
-        })
+            expiresIn: "7d",
+        });
 
         res.cookie("jwt", token, cookieOptions);
-        // googleLogin: res.cookie("jwt", accessToken, cookieOptions);
 
-        res.status(201).json({ success: true, user: newUser })
+        const safeUser = newUser.toObject();
+        delete safeUser.password;
+        res.status(201).json({ success: true, user: safeUser });
     } catch (error) {
         console.log("Error is signup controller: ", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 }
-
 
 // Login Logic
 export async function login(req, res) {
@@ -96,27 +93,24 @@ export async function login(req, res) {
         if (!user) return res.status(400).json({ message: "Invalid email or password" });
 
         if (!user.password) {
-            return res.status(400).json({ message: "This account uses Google Login. Please continue with Google." })
+            return res.status(400).json({ message: "This account uses Google Login. Please continue with Google." });
         }
 
-        const isPasswordCorrect = await user.matchPassword(password)
+        const isPasswordCorrect = await user.matchPassword(password);
         if (!isPasswordCorrect) return res.status(401).json({ message: "Invalid email or password" });
 
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "7d" });
 
         res.cookie("jwt", token, cookieOptions);
-        // googleLogin: res.cookie("jwt", accessToken, cookieOptions);
 
-        res.status(200).json({ success: true, user });
-
+        const safeUser = user.toObject();
+        delete safeUser.password;
+        res.status(200).json({ success: true, user: safeUser });
     } catch (error) {
         console.log("Error in login controller", error.message);
         res.status(500).json({ message: "Internal Server Error" });
     }
-
 }
-
-
 
 // Logout Logic
 export function logout(req, res) {
@@ -128,8 +122,6 @@ export function logout(req, res) {
     res.status(200).json({ success: true, message: "Logout Successfully" });
 }
 
-
-
 // Google Login Logic
 export const googleLogin = async (req, res) => {
     try {
@@ -138,29 +130,23 @@ export const googleLogin = async (req, res) => {
         if (!credential) {
             return res.status(400).json({
                 success: false,
-                message: "Google credential is required"
+                message: "Google credential is required",
             });
         }
 
         // Verify Google credential
         const ticket = await googleClient.verifyIdToken({
             idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID
+            audience: process.env.GOOGLE_CLIENT_ID,
         });
 
         const payload = ticket.getPayload();
-
-        const {
-            sub,
-            email,
-            name,
-            picture
-        } = payload;
+        const { sub, email, name, picture } = payload;
 
         if (!email) {
             return res.status(400).json({
                 success: false,
-                message: "Google email not available"
+                message: "Google email not available",
             });
         }
 
@@ -175,50 +161,36 @@ export const googleLogin = async (req, res) => {
                 password: null,
                 googleId: sub,
                 profilePic: picture || "",
-                isOnboarded: false
+                isOnboarded: false,
             });
-        } else {
+        } else if (!user.googleId) {
             // Link Google account if user already exists
-            if (!user.googleId) {
-                user.googleId = sub;
-                await user.save({
-                    validateBeforeSave: false
-                });
-            }
+            user.googleId = sub;
+            await user.save({ validateBeforeSave: false });
         }
 
-        // Generate access token
+        // Generate access token and store it in the cookie
         const accessToken = generateAccessToken(user);
-
-        // Store JWT in cookie
-        res.cookie("jwt", accessToken, {
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            httpOnly: true,
-            sameSite: "lax",
-            secure: false
-        });
+        res.cookie("jwt", accessToken, cookieOptions);
 
         // Remove password before sending user
-        const loggedInUser = await User.findById(user._id)
-            .select("-password");
+        const loggedInUser = await User.findById(user._id).select("-password");
 
         return res.status(200).json({
             success: true,
             message: "Google login successful",
-            user: loggedInUser
+            user: loggedInUser,
         });
-
     } catch (error) {
         console.error("GOOGLE LOGIN ERROR:", error);
 
         return res.status(500).json({
             success: false,
             message: "Google login failed",
-            error: error.message
+            error: error.message,
         });
     }
 };
-
 
 // Onboard Logic
 export async function onboard(req, res) {
@@ -235,36 +207,37 @@ export async function onboard(req, res) {
                     !bio && "bio",
                     !nativeLanguage && "nativeLanguage",
                     !learningLanguage && "learningLanguage",
-                    !location && "location"
-                ].filter(Boolean)
-            })
+                    !location && "location",
+                ].filter(Boolean),
+            });
         }
 
-        const updatedUser = await User.findByIdAndUpdate(userId, {
-            ...req.body,
-            isOnboarded: true
-        }, { new: true })
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { ...req.body, isOnboarded: true },
+            { new: true }
+        ).select("-password");
 
-        if (!updatedUser) return res.status(404).json({ message: "User not found" })
+        if (!updatedUser) return res.status(404).json({ message: "User not found" });
 
-        res.status(200).json({ success: true, user: updatedUser })
-
+        // Update Stream BEFORE responding (serverless can freeze after the response)
         try {
             await upsertStreamUser({
                 id: updatedUser._id.toString(),
                 name: updatedUser.fullName,
-                image: updatedUser.profilePic
-            })
+                image: updatedUser.profilePic,
+            });
             console.log(`Stream user updated after onboarding for ${updatedUser.fullName}`);
         } catch (streamError) {
             console.log("Error updating Stream user during onboarding:", streamError.message);
         }
+
+        res.status(200).json({ success: true, user: updatedUser });
     } catch (error) {
         console.log("Error in onboard controller:", error.message);
         res.status(500).json({ message: "Internal Server Error" });
     }
 }
-
 
 // Forgot Password Logic
 export async function forgotPassword(req, res) {
@@ -311,7 +284,6 @@ export async function forgotPassword(req, res) {
         res.status(500).json({ message: "Internal Server Error" });
     }
 }
-
 
 // Reset Password Logic
 export async function resetPassword(req, res) {
