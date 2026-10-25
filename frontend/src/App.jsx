@@ -52,11 +52,10 @@ const App = () => {
               <Layout showSidebar>
                 <HomePage />
               </Layout>
+            ) : isAuthenticated ? (
+              <Navigate to="/onboarding" replace />
             ) : (
-              <Navigate
-                to={!isAuthenticated ? "/login" : "/onboarding"}
-                replace
-              />
+              <LandingPage />
             )
           }
         />
