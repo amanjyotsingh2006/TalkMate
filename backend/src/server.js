@@ -14,9 +14,12 @@ const app = express();
 const PORT = process.env.PORT;
 
 app.use(cors({
-    origin: ["http://localhost:5173", "http://192.168.1.4:5173"],
-    credentials: true  //allow frontend to send cookies
+    origin: "https://talkmate-backend.vercel.app",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
