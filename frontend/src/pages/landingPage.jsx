@@ -16,6 +16,7 @@ import {
     Star,
     Languages,
     Sparkles,
+    ShipWheelIcon,
 } from "lucide-react";
 import { Link } from "react-router";
 
@@ -99,7 +100,7 @@ const testimonials = [
     },
     {
         quote:
-            "Streamify helped me connect with people around the world. I have improved my Korean and made genuine friendships along the way.",
+            "TalkMate helped me connect with people around the world. I have improved my Korean and made genuine friendships along the way.",
         name: "Daniel K. Chen",
         detail: "English → Korean",
         image: "photo-1507003211169-0a1dd7228f2d",
@@ -118,11 +119,18 @@ function Brand() {
     return (
         <a href="#home" className="flex shrink-0 items-center gap-2.5">
             <span className="grid h-9 w-9 place-items-center rounded-xl border border-[#35432e] bg-[#192019] text-[#91e98a]">
-                <Globe size={20} />
+                <ShipWheelIcon
+                    className="
+                  size-7
+                  text-[#91e98a]
+                  transition-transform duration-300
+                  group-hover:rotate-12
+                "
+                />
             </span>
             <span>
                 <span className="block text-base font-bold leading-tight tracking-tight text-[#91e98a]">
-                    Streamify
+                    TalkMate
                 </span>
                 <span className="block text-[8px] tracking-[1.2px] text-[#a4aa9b]">
                     Connect. Talk. Share.
@@ -396,9 +404,9 @@ function Features() {
         <section id="features" className="border-y border-white/[0.03] bg-[#0a0c08] py-20 sm:py-24">
             <div className={container}>
                 <SectionHeading
-                    eyebrow="THE STREAMIFY METHOD"
+                    eyebrow="THE TALKMATE METHOD"
                     title="Engineered for Fluency, Built for Real Connection"
-                    description="Traditional tools treat languages like vocabulary lists. Streamify treats languages like living, breathing conversations between cultured minds."
+                    description="Traditional tools treat languages like vocabulary lists. TalkMate treats languages like living, breathing conversations between cultured minds."
                 />
 
                 <div className="grid gap-5 md:grid-cols-2">
@@ -430,7 +438,7 @@ function Features() {
                                     <Check size={14} className="text-[#91e98a]" />
                                     {feature.footer}
                                     <span className="ml-auto rounded-full bg-[#253222] px-3 py-1.5 text-[9px] text-[#91e98a]">
-                                        Streamify
+                                        TalkMate
                                     </span>
                                 </div>
                             </article>
@@ -468,8 +476,8 @@ function Partners() {
                         <article
                             key={partner.name}
                             className={`relative flex min-w-0 flex-col rounded-2xl border p-5 transition duration-300 hover:-translate-y-1 ${partner.featured
-                                    ? "border-[#45563c] bg-gradient-to-br from-[#20291d] to-[#151812]"
-                                    : "border-[#292e25] bg-[#171a14] hover:border-[#45533d]"
+                                ? "border-[#45563c] bg-gradient-to-br from-[#20291d] to-[#151812]"
+                                : "border-[#292e25] bg-[#171a14] hover:border-[#45533d]"
                                 }`}
                         >
                             {partner.featured && (
@@ -606,7 +614,7 @@ function JoinSection() {
                 </h2>
 
                 <p className="mx-auto mt-4 max-w-xl text-xs leading-7 text-[#c0c4b8] sm:text-sm">
-                    Join Streamify today. Free to get started, no credit card required.
+                    Join TalkMate today. Free to get started, no credit card required.
                     Connect with your first language partner and start practising.
                 </p>
 
@@ -630,9 +638,9 @@ function JoinSection() {
           </label> */}
 
                     <Link to={"/signup"}>
-                    <button type="submit" className='flex gap-2 justify-center items-center w-60 h-10 rounded-full bg-green-500'>
-                        Create Free Account <ArrowRight size={15} />
-                    </button>
+                        <button type="submit" className='flex gap-2 justify-center items-center w-60 h-10 rounded-full bg-green-500'>
+                            Create Free Account <ArrowRight size={15} />
+                        </button>
                     </Link>
                 </form>
 
@@ -738,7 +746,7 @@ function Footer() {
                 </div>
 
                 <div className="flex flex-col gap-4 py-5 text-[10px] text-[#a3a79a] sm:flex-row sm:items-center sm:justify-between">
-                    <p>© 2026 Streamify. All rights reserved.</p>
+                    <p>© 2026 TalkMate. All rights reserved.</p>
 
                     <div className="flex flex-wrap gap-4">
                         <a href="#join" className="hover:text-white">Privacy</a>

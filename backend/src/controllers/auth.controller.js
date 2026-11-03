@@ -266,7 +266,7 @@ export async function forgotPassword(req, res) {
 
             await sendEmail({
                 to: user.email,
-                subject: "Reset your Streamify password",
+                subject: "Reset your Talkmate password",
                 html: `
           <p>Hi ${user.fullName},</p>
           <p>Click the link below to reset your password. It expires in 15 minutes.</p>

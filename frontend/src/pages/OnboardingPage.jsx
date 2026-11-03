@@ -158,7 +158,7 @@ const OnboardingPage = () => {
         <div className="w-full max-w-[560px]">
           <div className="flex items-center gap-2 mb-10">
             <ShipWheelIcon className="size-7 text-[#8FE388]" />
-            <span className="font-display text-2xl text-[#F3F1EA]">Streamify</span>
+            <span className="font-display text-2xl text-[#F3F1EA]">TalkMate</span>
           </div>
 
           <p className="text-[13px] text-[#6F7D74] mb-3">One last step</p>

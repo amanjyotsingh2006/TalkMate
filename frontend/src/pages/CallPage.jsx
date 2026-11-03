@@ -125,7 +125,7 @@ const CallPage = () => {
         {/* LOGO */}
 
         <span className="truncate font-display text-base font-medium text-primary sm:text-lg">
-          Streamify
+          TalkMate
         </span>
 
         {/* CALL TIMER */}

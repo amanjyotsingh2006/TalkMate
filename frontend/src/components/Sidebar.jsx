@@ -60,7 +60,7 @@ const Sidebar = () => {
 
             <div>
               <h1 className="font-display text-xl text-base-content">
-                Streamify
+                TalkMate
               </h1>
 
               <p className="text-[11px] font-medium text-base-content/50">

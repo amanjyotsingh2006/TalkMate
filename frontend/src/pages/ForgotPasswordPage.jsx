@@ -131,7 +131,7 @@ const ForgotPasswordPage = () => {
           <p className="mt-8 text-[13px] text-[#6F7D74]">
             Having trouble accessing your inbox?{" "}
             <a
-              href="mailto:support@streamify.com"
+              href="mailto:support@talkmate.com"
               className="underline hover:text-[#F3F1EA]"
             >
               Contact Support

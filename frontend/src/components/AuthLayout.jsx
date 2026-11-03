@@ -87,7 +87,7 @@ const AuthLayout = ({ children, panelTitle, panelText }) => {
         <div className="w-full max-w-md lg:max-w-none lg:w-1/2">
           <div className="flex items-center gap-2 mb-10">
             <ShipWheelIcon className="size-7 text-[#8FE388]" />
-            <span className="font-display text-2xl text-[#F3F1EA]">Streamify</span>
+            <span className="font-display text-2xl text-[#F3F1EA]">TalkMate</span>
           </div>
 
           {children}
