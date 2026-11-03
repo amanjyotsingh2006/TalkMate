@@ -30,21 +30,21 @@ app.use(cookieParser());
 
 // Make sure the DB is connected before any route runs 
 // For deployment vercel
-// app.use(async (req, res, next) => {
-//     try {
-//         await connectDB();
-//         next();
-//     } catch (error) {
-//         console.log("DB connection failed:", error.message);
-//         res.status(503).json({ message: "Database unavailable, please retry" });
-//     }
-// });
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        console.log("DB connection failed:", error.message);
+        res.status(503).json({ message: "Database unavailable, please retry" });
+    }
+});
 
 
 // For local development
-connectDB()
-    .then(() => console.log("MongoDB connected successfully"))
-    .catch((err) => console.error("MongoDB connection failed:", err.message));
+// connectDB()
+//     .then(() => console.log("MongoDB connected successfully"))
+//     .catch((err) => console.error("MongoDB connection failed:", err.message));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
